@@ -54,14 +54,14 @@ func TestGatekeeper(t *testing.T) {
 		{
 			des:   "no authorization",
 			token: "",
-			code:  http.StatusNonAuthoritativeInfo,
-			res:   `{"error": {"title":"Authorization Required", "detail":"Token not found"}}`,
+			code:  http.StatusUnauthorized,
+			res:   `{"error": {"title":"Authorization Required", "detail":"token not found"}}`,
 		},
 		{
 			des:   "invalid authorization",
 			token: "Bearertoken",
 			code:  http.StatusUnprocessableEntity,
-			res:   `{"error": {"title":"Unable To Extract Token", "detail":"Invalid token format"}}`,
+			res:   `{"error": {"title":"Unable To Extract Token", "detail":"invalid token format"}}`,
 		},
 		{
 			des:   "invalid authorization",

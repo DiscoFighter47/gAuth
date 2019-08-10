@@ -13,7 +13,7 @@ func (auth *Auth) Gatekeeper(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		brToken := r.Header.Get("Authorization")
 		if brToken == "" {
-			panic(gson.NewAPIerror("Authorization Required", http.StatusNonAuthoritativeInfo, ErrTokenNotFound))
+			panic(gson.NewAPIerror("Authorization Required", http.StatusUnauthorized, ErrTokenNotFound))
 		}
 		token, err := extractBearerToken(brToken)
 		if err != nil {
