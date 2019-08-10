@@ -4,7 +4,7 @@ import "errors"
 
 var (
 	// ErrTokenNotFound ...
-	ErrTokenNotFound = errors.New("token not found")
+	ErrTokenNotFound = errors.New("Token not found")
 	// ErrInvalidTokenFormat ...
-	ErrInvalidTokenFormat = errors.New("invalid token format")
+	ErrInvalidTokenFormat = errors.New("Invalid token format")
 )

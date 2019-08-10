@@ -11,7 +11,11 @@ import (
 // Gatekeeper ...
 func (auth *Auth) Gatekeeper(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := extractBearerToken(r.Header.Get("Authorization"))
+		brToken := r.Header.Get("Authorization")
+		if brToken == "" {
+			panic(gson.NewAPIerror("Authorization Required", http.StatusNonAuthoritativeInfo, ErrTokenNotFound))
+		}
+		token, err := extractBearerToken(brToken)
 		if err != nil {
 			panic(gson.NewAPIerror("Unable To Extract Token", http.StatusUnprocessableEntity, err))
 		}
@@ -19,15 +23,12 @@ func (auth *Auth) Gatekeeper(next http.Handler) http.Handler {
 		if err != nil {
 			panic(gson.NewAPIerror("Invalid Token", http.StatusUnauthorized, err))
 		}
-		r.Header.Add("subject", fmt.Sprintf("%v", claims["sub"]))
+		r.Header.Add("Subject", fmt.Sprintf("%v", claims["sub"]))
 		next.ServeHTTP(w, r)
 	})
 }
 
 func extractBearerToken(token string) (string, error) {
-	if token == "" {
-		return "", ErrTokenNotFound
-	}
 	splitToken := strings.Split(token, "Bearer ")
 	if len(splitToken) != 2 || splitToken[1] == "" {
 		return "", ErrInvalidTokenFormat
