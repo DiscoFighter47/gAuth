@@ -1,7 +1,6 @@
 package gauth
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,7 +11,7 @@ import (
 // Gatekeeper ...
 func (auth *Auth) Gatekeeper(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := extractBearerToken(r)
+		token, err := extractBearerToken(r.Header.Get("Authorization"))
 		if err != nil {
 			panic(gson.NewAPIerror("Unable To Extract Token", http.StatusUnprocessableEntity, err))
 		}
@@ -25,11 +24,13 @@ func (auth *Auth) Gatekeeper(next http.Handler) http.Handler {
 	})
 }
 
-func extractBearerToken(r *http.Request) (string, error) {
-	token := r.Header.Get("Authorization")
-	splitToken := strings.Split(token, "Bearer")
-	if len(splitToken) != 2 {
-		return "", errors.New("invalid bearer token format")
+func extractBearerToken(token string) (string, error) {
+	if token == "" {
+		return "", ErrTokenNotFound
+	}
+	splitToken := strings.Split(token, "Bearer ")
+	if len(splitToken) != 2 || splitToken[1] == "" {
+		return "", ErrInvalidTokenFormat
 	}
 	return strings.TrimSpace(splitToken[1]), nil
 }
