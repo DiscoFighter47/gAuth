@@ -1,4 +1,4 @@
-package gauth
+package auth
 
 import (
 	"fmt"
