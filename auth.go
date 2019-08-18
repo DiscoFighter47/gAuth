@@ -13,6 +13,7 @@ type Auth struct {
 	method        jwt.SigningMethod
 	expireTimeout time.Duration
 	secret        string
+	store         BlackList
 }
 
 // NewAuth ...
@@ -24,15 +25,21 @@ func NewAuth(secret string, exp time.Duration) *Auth {
 	}
 }
 
+// SetBlackListStore ...
+func (auth *Auth) SetBlackListStore(store BlackList) {
+	auth.store = store
+}
+
 // GenerateToken ...
-func (auth *Auth) GenerateToken(sub string) (string, error) {
+func (auth *Auth) GenerateToken(sub string) string {
 	id, _ := uuid.NewUUID()
-	return jwt.NewWithClaims(auth.method, jwt.StandardClaims{
+	token, _ := jwt.NewWithClaims(auth.method, jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(auth.expireTimeout).Unix(),
 		Id:        id.String(),
 		IssuedAt:  time.Now().Unix(),
 		Subject:   sub,
 	}).SignedString([]byte(auth.secret))
+	return token
 }
 
 func (auth *Auth) parser(token *jwt.Token) (interface{}, error) {
@@ -43,8 +50,25 @@ func (auth *Auth) parser(token *jwt.Token) (interface{}, error) {
 }
 
 // Validate ...
-func (auth *Auth) Validate(tokenString string) (jwt.MapClaims, error) {
+func (auth *Auth) Validate(token string) (jwt.MapClaims, error) {
+	if auth.store != nil {
+		found, err := auth.store.Contains(token)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			return nil, ErrSignedOutToken
+		}
+	}
 	claims := jwt.MapClaims{}
-	_, err := jwt.ParseWithClaims(tokenString, claims, auth.parser)
+	_, err := jwt.ParseWithClaims(token, claims, auth.parser)
 	return claims, err
+}
+
+// Invalidate ...
+func (auth *Auth) Invalidate(token string) error {
+	if auth.store == nil {
+		return ErrUnsupportedOperation
+	}
+	return auth.store.AddKey(token)
 }

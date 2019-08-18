@@ -3,7 +3,6 @@ package auth
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	gson "github.com/DiscoFighter47/gSON"
 )
@@ -15,7 +14,7 @@ func (auth *Auth) Gatekeeper(next http.Handler) http.Handler {
 		if brToken == "" {
 			panic(gson.NewAPIerror("Authorization Required", http.StatusUnauthorized, ErrTokenNotFound))
 		}
-		token, err := extractBearerToken(brToken)
+		token, err := ExtractBearerToken(brToken)
 		if err != nil {
 			panic(gson.NewAPIerror("Unable To Extract Token", http.StatusUnprocessableEntity, err))
 		}
@@ -26,12 +25,4 @@ func (auth *Auth) Gatekeeper(next http.Handler) http.Handler {
 		r.Header.Add("Subject", fmt.Sprintf("%v", claims["sub"]))
 		next.ServeHTTP(w, r)
 	})
-}
-
-func extractBearerToken(token string) (string, error) {
-	splitToken := strings.Split(token, "Bearer ")
-	if len(splitToken) != 2 || splitToken[1] == "" {
-		return "", ErrInvalidTokenFormat
-	}
-	return strings.TrimSpace(splitToken[1]), nil
 }

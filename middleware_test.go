@@ -22,7 +22,7 @@ func testHandler() http.HandlerFunc {
 
 func TestGatekeeper(t *testing.T) {
 	auth := NewAuth("secret", 1*time.Second)
-	token, _ := auth.GenerateToken("user1")
+	token := auth.GenerateToken("user")
 	svr := gson.Recoverer(auth.Gatekeeper(testHandler()))
 
 	testData := []struct {
@@ -36,20 +36,7 @@ func TestGatekeeper(t *testing.T) {
 			des:   "valid authorization",
 			token: "Bearer " + token,
 			code:  http.StatusOK,
-			res:   `{"data":{"msg":"Hello Secret Universe! Welcome user1"}}`,
-		},
-		{
-			des:   "valid authorization",
-			token: "  Bearer  " + token + " ",
-			code:  http.StatusOK,
-			res:   `{"data":{"msg":"Hello Secret Universe! Welcome user1"}}`,
-		},
-		{
-			sleep: 2 * time.Second,
-			des:   "expired authorization",
-			token: "Bearer " + token,
-			code:  http.StatusUnauthorized,
-			res:   `{"error": {"title":"Invalid Token", "detail":"Token is expired"}}`,
+			res:   `{"data":{"msg":"Hello Secret Universe! Welcome user"}}`,
 		},
 		{
 			des:   "no authorization",
